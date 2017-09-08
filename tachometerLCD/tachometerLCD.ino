@@ -23,7 +23,7 @@ Adafruit_TFTLCD tft(LCD_CS, LCD_CD, LCD_WR, LCD_RD, LCD_RESET);
 #define WIDTH   480
 #define HEIGHT  320
 
-bool DEBUG = true;
+bool DEBUG = false;
 
 //RPM VARIABLES
 //rpm
@@ -45,6 +45,9 @@ int barx = (WIDTH-barw)/2;
 int bary = 240;
 int barh = 60;
 int barg = 3;
+
+//Time
+unsigned long prevTime = 0;
 
 //OBD2
 #include <OBD2UART.h>
@@ -68,7 +71,15 @@ void setup() {
   tft.setTextSize(4);
   tft.print("0000 RPM");
   tft.drawRect(barx-barg,bary-barg,barw+barg*2, barh+barg*2, CYAN);
-  //tft.drawRect(0,0,480,320,BLUE);
+  
+  
+  tft.setTextSize(2);
+  tft.setCursor(WIDTH - (7*totalTextWidth/2), 3); //12.00 V
+  tft.print("12.00 V");
+
+  
+  tft.setCursor(3, 3); //100%
+  tft.print("100%");
 
   Serial.println("Initializing obd...");
   obd.leaveLowPowerMode();
@@ -91,8 +102,16 @@ void loop() {
     fillBar();
     prevrpm = rpm;
 
-    //Voltage
-    writeVolts();
+    //Run every 5 seconds
+    if(millis() - prevTime > 5000){
+      prevTime = millis();
+      
+      //Voltage
+      writeVolts();
+  
+      //Fuel
+      writeFuel();
+    }
 
     //If the car is off... turn off
     if(false){
@@ -142,17 +161,31 @@ void fillBar(){
 }
 
 void writeVolts(){
-  float volts = 0;
+  int volts = 0;
   if(!DEBUG)
-    volts = obd.readPID(PID_CONTROL_MODULE_VOLTAGE,rpm);
+    obd.readPID(PID_CONTROL_MODULE_VOLTAGE,volts);
   else
     volts = 12.0;
   tft.setTextSize(2);
-  tft.setCursor(WIDTH - (7*totalTextWidth/2), 3); //12.0 V
+  tft.setCursor(WIDTH - (7*totalTextWidth/2), 3); //12.00 V
+  tft.fillRect(WIDTH - (7*totalTextWidth/2), 3,5*2,2,BLACK);
   tft.print(volts);
-  tft.print(" V");
   Serial.print(volts);
   Serial.println(" V");
+}
+
+void writeFuel(){
+  int fuel = 0;
+  if(!DEBUG)
+    obd.readPID(PID_FUEL_LEVEL,fuel);
+  else
+    fuel = 100;
+  tft.setTextSize(2);
+  tft.setCursor(3, 3);
+  tft.fillRect(3,3,3*2,2,BLACK);
+  tft.print(fuel);
+  Serial.print(fuel);
+  Serial.println(" %");
 }
 
 
