@@ -168,7 +168,7 @@ void writeVolts(){
     volts = 12.0;
   tft.setTextSize(2);
   tft.setCursor(WIDTH - (7*totalTextWidth/2), 3); //12.00 V
-  tft.fillRect(WIDTH - (7*totalTextWidth/2), 3,5*2,2,BLACK);
+  tft.fillRect(WIDTH - (7*totalTextWidth/2), 3,5*(totalTextWidth/2),textHeight/2,BLACK);
   tft.print(volts);
   Serial.print(volts);
   Serial.println(" V");
@@ -182,7 +182,7 @@ void writeFuel(){
     fuel = 100;
   tft.setTextSize(2);
   tft.setCursor(3, 3);
-  tft.fillRect(3,3,3*2,2,BLACK);
+  tft.fillRect(3,3,3*(totalTextWidth/2),textHeight/2,BLACK);
   tft.print(fuel);
   Serial.print(fuel);
   Serial.println(" %");
