@@ -45,6 +45,10 @@ int barx = (WIDTH-barw)/2;
 int bary = 240;
 int barh = 60;
 int barg = 3;
+//throttle
+int prevThrottle = barx;
+int throttleDir = 1;
+int throttle = 0;
 
 //Time
 unsigned long prevTime = 0;
@@ -75,7 +79,7 @@ void setup() {
   
   tft.setTextSize(2);
   tft.setCursor(WIDTH - (7*totalTextWidth/2), 3); //12.00 V
-  tft.print("12.00 V");
+  tft.print("      V");
 
   
   tft.setCursor(3, 3); //100%
@@ -101,6 +105,7 @@ void loop() {
     writeDigits();
     fillBar();
     prevrpm = rpm;
+    drawThrottle();
 
     //Run every 5 seconds
     if(millis() - prevTime > 5000){
@@ -160,6 +165,26 @@ void fillBar(){
   prevLength = length;
 }
 
+void drawThrottle(){
+  if(DEBUG){
+    throttle += 1*throttleDir;
+    if(throttle >= 100)
+      throttleDir = -1;
+    else if(throttle <= 0)
+      throttleDir = 1;
+  }else
+    obd.readPID(PID_THROTTLE,throttle);
+  Serial.print("Throttle: ");
+  Serial.println(throttle);
+  int throttlew = barx + (((float)throttle)/100) * barw;
+  int diff = throttlew - prevThrottle;
+  if(throttlew > prevThrottle)
+    tft.drawFastHLine(prevThrottle,bary-barg*3,diff,CYAN);
+  else if(throttlew < prevThrottle)
+    tft.drawFastHLine(throttlew,bary-barg*3,-diff,BLACK);
+  prevThrottle = throttlew;
+}
+
 void writeVolts(){
   int volts = 0;
   if(!DEBUG)
@@ -167,8 +192,8 @@ void writeVolts(){
   else
     volts = 12.0;
   tft.setTextSize(2);
-  tft.setCursor(WIDTH - (7*totalTextWidth/2), 3); //12.00 V
-  tft.fillRect(WIDTH - (7*totalTextWidth/2), 3,5*(totalTextWidth/2),textHeight/2,BLACK);
+  tft.setCursor(WIDTH - (4*totalTextWidth/2), 3); //12.00 V
+  tft.fillRect(WIDTH - (4*totalTextWidth/2), 3,2*(totalTextWidth/2),textHeight/2,BLACK);
   tft.print(volts);
   Serial.print(volts);
   Serial.println(" V");
